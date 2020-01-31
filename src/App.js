@@ -5,28 +5,9 @@ class App extends React.Component {
   state = {
     arrTime: [],
     timeDiff: "",
-    currentTime: ""
   }
-  componentWillMount() {
-    let currTime = new Date();
-    let hours = currTime.getHours();
-    let minutes = currTime.getMinutes();
-    let time = this.getTimeIn12Hours(hours, minutes);
-    this.setState({
-      currentTime: time
-    });
-  }
-  componentDidUpdate() {
-    let time1, time2 = this.state.currentTime;
-    let { arrTime } = this.state;
 
-    if (arrTime.length % 2 === 0) {
-      time1 = arrTime[arrTime.length - 1];
-      this.getTimeDifferenceBetween();
-    }
-    else
-      time2 = arrTime[arrTime.length - 1]
-  }
+
   pushTimeIntoArr = (currTime) => {
     currTime = new Date();
     let hours = currTime.getHours();
@@ -34,61 +15,64 @@ class App extends React.Component {
     let time = this.getTimeIn12Hours(hours, minutes);
     this.setState({
       arrTime: [...this.state.arrTime, time]
+    }, () => {
+      this.findDifference()
     })
   }
   getTimeIn12Hours = (hours, minutes) => {
     let day = "";
     if (Number(hours) > 12) {
-      day = "PM";
+      day = "AM";
       hours = Number(hours) - 12;
     }
     else
-      day = "AM";
+      day = "PM";
     return (hours + ":" + + minutes + ":" + day);
   }
-  getTimeDifferenceBetween = (prev="3:30:AM", next="3:5:PM") => {
+  findDifference = () => {
+    let { arrTime } = this.state;
+    if (arrTime.length % 2 === 0) {
+      this.getTimeDifferenceBetween(arrTime[arrTime.length - 2], arrTime[arrTime.length - 1]);
+    }
+  }
+  getTimeDifferenceBetween = (prev, next) => {
     let prevTime = prev.split(":");
     let nextTime = next.split(":");
     let prevHour = Number(prevTime[0]), prevMin = Number(prevTime[1]), prevDay = prevTime[2];
     let nextHour = Number(nextTime[0]), nextMin = Number(nextTime[1]), nextDay = nextTime[2];
     let add12Hr = false;
     let diff = "";
-    let diffHr, diffMin;
+    let diffHr = 0, diffMin = 0;
     if (prevDay === "PM" && nextDay === "AM")
       add12Hr = true;
     else if (prevDay === "AM" && nextDay === "PM")
       add12Hr = true;
-
-
-
     diffHr = Number(nextHour) - Number(prevHour);
     if (add12Hr === true)
-    diffHr = (Number(nextHour) - Number(prevHour)) + 12;
+      diffHr = (Number(nextHour) - Number(prevHour)) + 12;
     diffMin = (Number(nextMin) - Number(prevMin));
-    diff = diffHr + " HR " + Math.abs(diffMin) + " MIN";
-  
-      setTimeout(()=>{
-        this.setDiffTime(diff);
-      },5)
+    if (Number(diffMin) < 0) {
+      diffHr -= 1;
+      diffMin += 60;
     }
-  setDiffTime = (difference) => {
+    diff = Math.abs(diffHr) + " HR " + Math.abs(diffMin) + " MIN";
     this.setState({
-      timeDiff: difference
+      timeDiff: diff
     })
   }
 
   render() {
-    let {arrTime} = this.state;
+    let { arrTime } = this.state;
     return (<>
       <button onClick={this.pushTimeIntoArr}>
         Click
       </button>
       <br />
-          <>
-              {JSON.stringify(arrTime)}
-          </>
+      <>
+        {JSON.stringify(arrTime)}
+      </>
       <br />
-         {this.state.timeDiff}
+      Difference: {this.state.timeDiff}
     </>);
   }
 }
